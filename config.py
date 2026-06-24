@@ -1,0 +1,32 @@
+import numpy as np
+
+
+CAMERA_ID = 0
+
+WORKSPACE_LENGTH_MM = 400
+WORKSPACE_WIDTH_MM = 620
+
+ROBOT_COM_PORT = "COM17"
+ROBOT_BAUD_RATE = 115200
+ROBOT_ADDRESS = -1
+ROBOT_SPEED = 30
+
+TOUCH_Z_MM = 43.7
+MOVE_RX_DEG = 0
+MOVE_RY_DEG = 0
+MOVE_RZ_DEG = 0
+PUMP_SETTLE_SECONDS = 0.5
+
+WORLD_POINTS = np.array([
+    [310, 310],
+    [310, -310],
+    [-90, -310],
+    [-90, 310],
+], dtype=np.float32)
+
+ROBOT_BASE_WORLD = np.array([0, 0, 0], dtype=np.float32)
+PLACE_POINT_WORLD = np.array([0, 0, 0], dtype=np.float32)
+
+DETECTION_UPDATE_SECONDS = 10
+CUBE_MATCH_DISTANCE_PX = 60
+
