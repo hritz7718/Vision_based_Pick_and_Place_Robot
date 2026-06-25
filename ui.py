@@ -13,6 +13,18 @@ from placement import PlacementPlanner
 from robot_commands import RobotController
 
 
+APP_BG = "#d8d8d4"
+APP_SURFACE = "#efefec"
+PANEL_BG = "#f8f8f5"
+CAMERA_BG = "#171918"
+BORDER = "#b8bbb6"
+TEXT_DARK = "#191b1d"
+TEXT_MUTED = "#666a6d"
+ACCENT = "#00a6a6"
+ACCENT_DARK = "#087777"
+CLASSIC_RED = "#b13b3b"
+
+
 class RobotVisionUI:
     def __init__(self, root):
         self.root = root
@@ -26,6 +38,8 @@ class RobotVisionUI:
             self.root.destroy()
             return
 
+        self.frame_width = 800
+        self.frame_height = 600
         self.calibration_mode = False
         self.calibration_done = False
         self.zone_calibration_mode = False
@@ -61,84 +75,191 @@ class RobotVisionUI:
         self.cube_tracker.detected_cube_points = value
 
     def build_layout(self):
-        main_frame = tk.Frame(self.root)
-        main_frame.pack(padx=10, pady=10)
+        self.root.configure(bg=APP_BG)
+        self.root.geometry("1240x820")
+        self.root.minsize(1100, 760)
 
-        self.video_label = tk.Label(main_frame)
-        self.video_label.grid(row=0, column=0, sticky="n")
+        title_bar = tk.Frame(self.root, bg=APP_SURFACE, height=44)
+        title_bar.pack(fill=tk.X, padx=18, pady=(14, 0))
+        title_bar.pack_propagate(False)
 
-        log_frame = tk.Frame(main_frame)
-        log_frame.grid(row=0, column=1, padx=(12, 0), sticky="ns")
+        window_dots = tk.Frame(title_bar, bg=APP_SURFACE)
+        window_dots.pack(side=tk.LEFT, padx=(14, 0))
+        for color in ("#9b9b96", "#b6b6b0", "#d0d0ca"):
+            tk.Label(
+                window_dots,
+                text="●",
+                fg=color,
+                bg=APP_SURFACE,
+                font=("Arial", 12, "bold"),
+            ).pack(side=tk.LEFT, padx=2)
 
-        log_title = tk.Label(
-            log_frame,
-            text="Detected Blocks",
+        tk.Label(
+            title_bar,
+            text="ROBOT VISION CALIBRATION SYSTEM",
+            bg=APP_SURFACE,
+            fg=TEXT_DARK,
             font=("Arial", 12, "bold"),
+        ).pack(expand=True)
+
+        shell = tk.Frame(
+            self.root,
+            bg=APP_SURFACE,
+            highlightbackground=BORDER,
+            highlightthickness=1,
         )
-        log_title.pack(anchor="w")
+        shell.pack(fill=tk.BOTH, expand=True, padx=18, pady=(0, 12))
+
+        main_frame = tk.Frame(shell, bg=APP_SURFACE)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=18, pady=18)
+        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(0, weight=1)
+
+        camera_frame = tk.Frame(
+            main_frame,
+            bg=CAMERA_BG,
+            highlightbackground="#2f3333",
+            highlightthickness=2,
+        )
+        camera_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
+
+        self.video_label = tk.Label(
+            camera_frame,
+            bg=CAMERA_BG,
+            bd=0,
+            highlightthickness=0,
+        )
+        self.video_label.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
+
+        log_frame = tk.Frame(
+            main_frame,
+            bg=PANEL_BG,
+            width=300,
+            highlightbackground=BORDER,
+            highlightthickness=1,
+        )
+        log_frame.grid(row=0, column=1, sticky="ns")
+        log_frame.grid_propagate(False)
+
+        self.log_title = tk.Label(
+            log_frame,
+            text="Detected Objects: 0",
+            bg=PANEL_BG,
+            fg=TEXT_DARK,
+            font=("Arial", 13, "bold"),
+            anchor="w",
+        )
+        self.log_title.pack(fill=tk.X, padx=14, pady=(14, 8))
+
+        tk.Frame(log_frame, height=1, bg="#d4d4cf").pack(fill=tk.X)
 
         self.block_log = tk.Text(
             log_frame,
-            width=38,
-            height=34,
+            width=34,
+            height=31,
             font=("Consolas", 10),
+            bg=PANEL_BG,
+            fg=TEXT_DARK,
+            insertbackground=TEXT_DARK,
+            relief=tk.FLAT,
+            bd=0,
+            padx=14,
+            pady=12,
             state=tk.DISABLED,
+            wrap=tk.WORD,
         )
         self.block_log.pack(fill=tk.BOTH, expand=True)
 
-        button_frame = tk.Frame(self.root)
-        button_frame.pack(pady=10)
+        button_frame = tk.Frame(shell, bg=APP_SURFACE)
+        button_frame.pack(fill=tk.X, padx=18, pady=(0, 12))
+
+        for column in range(5):
+            button_frame.grid_columnconfigure(column, weight=1)
+
+        button_options = {
+            "width": 20,
+            "height": 2,
+            "font": ("Arial", 10, "bold"),
+            "relief": tk.FLAT,
+            "bd": 0,
+            "highlightthickness": 1,
+            "highlightbackground": "#8e938d",
+            "bg": APP_SURFACE,
+            "fg": TEXT_DARK,
+            "activebackground": "#dde9e8",
+            "activeforeground": ACCENT_DARK,
+            "disabledforeground": "#969a96",
+            "cursor": "hand2",
+        }
 
         self.calibrate_button = tk.Button(
             button_frame,
             text="Calibrate New Map",
-            width=20,
             command=self.start_calibration,
+            **button_options,
         )
-        self.calibrate_button.grid(row=0, column=0, padx=5)
+        self.calibrate_button.grid(row=0, column=0, padx=6, sticky="ew")
 
         self.manual_button = tk.Button(
             button_frame,
             text="Manual Operation",
-            width=20,
             command=self.manual_operation,
+            **button_options,
         )
-        self.manual_button.grid(row=0, column=1, padx=5)
+        self.manual_button.grid(row=0, column=1, padx=6, sticky="ew")
 
         self.auto_button = tk.Button(
             button_frame,
             text="Automatic Operation",
-            width=20,
             command=self.automatic_operation,
+            **button_options,
         )
-        self.auto_button.grid(row=0, column=2, padx=5)
+        self.auto_button.grid(row=0, column=2, padx=6, sticky="ew")
 
         self.home_button = tk.Button(
             button_frame,
             text="Home Operation",
-            width=20,
             command=self.home_operation,
             state=tk.DISABLED,
+            **button_options,
         )
-        self.home_button.grid(row=0, column=3, padx=5)
+        self.home_button.grid(row=0, column=3, padx=6, sticky="ew")
 
         self.exit_button = tk.Button(
             button_frame,
             text="Exit",
-            width=20,
             command=self.exit_program,
+            **button_options,
         )
-        self.exit_button.grid(row=0, column=4, padx=5)
+        self.exit_button.config(
+            activebackground="#f0dddd",
+            activeforeground=CLASSIC_RED,
+        )
+        self.exit_button.grid(row=0, column=4, padx=6, sticky="ew")
 
         self.status_label = tk.Label(
-            self.root,
-            text="Status: Not calibrated",
-            font=("Arial", 12),
+            shell,
+            text="SYSTEM STATUS: AWAITING CALIBRATION",
+            bg=APP_SURFACE,
+            fg=TEXT_DARK,
+            font=("Arial", 14, "bold"),
         )
-        self.status_label.pack(pady=5)
+        self.status_label.pack(pady=(0, 4))
+
+        self.telemetry_label = tk.Label(
+            shell,
+            text="FEED: 800x600   •   FPS: 5   •   MODE: LIVE VISION",
+            bg=APP_SURFACE,
+            fg=TEXT_MUTED,
+            font=("Arial", 9),
+        )
+        self.telemetry_label.pack(pady=(0, 12))
 
     def set_status(self, text):
-        self.status_label.config(text=text)
+        display_text = text
+        if text.lower().startswith("status:"):
+            display_text = "SYSTEM STATUS:" + text.split(":", 1)[1]
+        self.status_label.config(text=display_text.upper())
 
     def update_home_button_state(self):
         if not hasattr(self, "home_button"):
@@ -281,6 +402,21 @@ class RobotVisionUI:
         self.cap.release()
         self.root.destroy()
 
+    def get_frame_click_position(self, event):
+        label_width = max(1, self.video_label.winfo_width())
+        label_height = max(1, self.video_label.winfo_height())
+
+        image_x_offset = max(0, (label_width - self.frame_width) // 2)
+        image_y_offset = max(0, (label_height - self.frame_height) // 2)
+
+        x = event.x - image_x_offset
+        y = event.y - image_y_offset
+
+        if x < 0 or y < 0 or x >= self.frame_width or y >= self.frame_height:
+            return None, None
+
+        return int(x), int(y)
+
     def mouse_click(self, event):
         if (
             not self.calibration_mode
@@ -289,8 +425,9 @@ class RobotVisionUI:
         ):
             return
 
-        x = event.x
-        y = event.y
+        x, y = self.get_frame_click_position(event)
+        if x is None or y is None:
+            return
 
         if self.workspace_calibration_mode:
             self.workspace_points.append([x, y])
@@ -421,7 +558,11 @@ class RobotVisionUI:
             return
 
         lines = []
-        lines.append(f"Saved blocks: {len(self.detected_cube_points)}")
+        object_count = len(self.detected_cube_points)
+        if hasattr(self, "log_title"):
+            self.log_title.config(text=f"Detected Objects: {object_count}")
+
+        lines.append(f"Saved blocks: {object_count}")
 
         if (
             self.calibration_done
@@ -601,7 +742,7 @@ class RobotVisionUI:
             self.set_status("Camera frame failed.")
             return
 
-        frame = cv2.resize(frame, (800, 600))
+        frame = cv2.resize(frame, (self.frame_width, self.frame_height))
         self.draw_calibration_points(frame)
         self.draw_division_line(frame)
         self.draw_workspace_points(frame)
