@@ -18,6 +18,15 @@ def pixel_to_world(homography, u, v):
     return xw, yw
 
 
+def world_to_pixel(homography, xw, yw):
+    inverse_homography = np.linalg.inv(homography)
+    world_point = np.array([[[xw, yw]]], dtype=np.float32)
+    pixel_point = cv2.perspectiveTransform(world_point, inverse_homography)
+    u = pixel_point[0][0][0]
+    v = pixel_point[0][0][1]
+    return u, v
+
+
 def world_to_robot(xw, yw, zw=0):
     xr = xw - ROBOT_BASE_WORLD[0]
     yr = yw - ROBOT_BASE_WORLD[1]
